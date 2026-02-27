@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .display-container {
+            margin-bottom: 20px;
+        }
+
+        .expression {
+            background: #f5f5f5;
+            color: #666;
+            font-size: 1em;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: right;
+            min-height: 25px;
+            word-wrap: break-word;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .display {
+            background: #2d3436;
+            color: #00ff88;
+            font-size: 2.5em;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: right;
+            min-height: 60px;
+            word-wrap: break-word;
+            word-break: break-all;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .buttons-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 15px 10px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .operator {
+            background: #667eea;
+            color: white;
+        }
+
+        .operator:hover {
+            background: #5568d3;
+        }
+
+        .scientific-operator {
+            background: #ff6b9d;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        .scientific-operator:hover {
+            background: #ff5a8c;
+        }
+
+        .equals {
+            background: #00ff88;
+            color: #333;
+            grid-column: span 2;
+            font-size: 1.2em;
+        }
+
+        .equals:hover {
+            background: #00dd77;
+        }
+
+        .clear {
+            background: #ff6b6b;
+            color: white;
+            grid-column: span 2;
+            font-size: 1em;
+        }
+
+        .clear:hover {
+            background: #ee5a5a;
+        }
+
+        .backspace {
+            background: #ffa502;
+            color: white;
+        }
+
+        .backspace:hover {
+            background: #ff9500;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .button-group {
+            margin-bottom: 15px;
+        }
+
+        .group-title {
+            color: #667eea;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+
+        .angle-mode {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .angle-btn {
+            padding: 8px 12px;
+            border: 2px solid #ff6b9d;
+            background: white;
+            color: #ff6b9d;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+
+        .angle-btn.active {
+            background: #ff6b9d;
+            color: white;
+        }
+
+        .angle-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="header">
+            <h1>🔬 Scientific Calculator</h1>
+            <div class="mode-toggle">
+                <button class="mode-btn active" onclick="toggleMode('basic')">Basic</button>
+                <button class="mode-btn" onclick="toggleMode('scientific')">Scientific</button>
+            </div>
+        </div>
+
+        <div class="display-container">
+            <div class="expression" id="expression"></div>
+            <div class="display" id="display">0</div>
+        </div>
+
+        <!-- Angle Mode Selection (Scientific only) -->
+        <div class="angle-mode hidden" id="angleMode">
+            <button class="angle-btn active" onclick="setAngleMode('deg')">DEG</button>
+            <button class="angle-btn" onclick="setAngleMode('rad')">RAD</button>
+            <button class="angle-btn" onclick="setAngleMode('grad')">GRAD</button>
+        </div>
+
+        <!-- Basic Mode -->
+        <div id="basicMode">
+            <div class="buttons-container">
+                <button class="clear" onclick="clearDisplay()">AC</button>
+                <button class="backspace" onclick="backspace()">⌫</button>
+                <button class="operator" onclick="appendOperator('/')">/</button>
+                <button class="operator" onclick="appendOperator('*')">×</button>
+                <button class="operator" onclick="appendOperator('%')">%</button>
+
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+                <button class="operator" onclick="appendOperator('-')">−</button>
+                <button class="operator" onclick="appendOperator('+')">+</button>
+
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+                <button onclick="toggleSign()">+/−</button>
+                <button onclick="appendNumber('.')">.</button>
+
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+                <button class="operator" onclick="appendOperator('//')">//</button>
+                <button class="operator" onclick="appendOperator('**')">x^y</button>
+
+                <button onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+                <button onclick="appendFunction('sqrt')">√</button>
+                <button class="operator" onclick="appendOperator('=')">−</button>
+                <button class="equals" onclick="calculate()" style="grid-column: span 2;">=</button>
+            </div>
+        </div>
+
+        <!-- Scientific Mode -->
+        <div id="scientificMode" class="hidden">
+            <div class="buttons-container">
+                <button class="clear" onclick="clearDisplay()">AC</button>
+                <button class="backspace" onclick="backspace()">⌫</button>
+                <button class="operator" onclick="appendOperator('/')">/</button>
+                <button class="operator" onclick="appendOperator('*')">×</button>
+                <button class="operator" onclick="appendOperator('%')">%</button>
+
+                <button class="scientific-operator" onclick="appendFunction('sin')">sin</button>
+                <button class="scientific-operator" onclick="appendFunction('cos')">cos</button>
+                <button class="scientific-operator" onclick="appendFunction('tan')">tan</button>
+                <button class="scientific-operator" onclick="appendFunction('log')">log</button>
+                <button class="scientific-operator" onclick="appendFunction('ln')">ln</button>
+
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+                <button class="operator" onclick="appendOperator('-')">−</button>
+                <button class="operator" onclick="appendOperator('+')">+</button>
+
+                <button class="scientific-operator" onclick="appendFunction('asin')">asin</button>
+                <button class="scientific-operator" onclick="appendFunction('acos')">acos</button>
+                <button class="scientific-operator" onclick="appendFunction('atan')">atan</button>
+                <button class="scientific-operator" onclick="appendFunction('sinh')">sinh</button>
+                <button class="scientific-operator" onclick="appendFunction('cosh')">cosh</button>
+
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+                <button class="operator" onclick="appendOperator('//')">//</button>
+                <button class="operator" onclick="appendOperator('**')">x^y</button>
+
+                <button class="scientific-operator" onclick="appendFunction('tanh')">tanh</button>
+                <button class="scientific-operator" onclick="appendFunction('factorial')">n!</button>
+                <button class="scientific-operator" onclick="appendFunction('sqrt')">√</button>
+                <button class="scientific-operator" onclick="appendFunction('cbrt')">∛</button>
+                <button class="scientific-operator" onclick="appendConstant('pi')">π</button>
+
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+                <button onclick="toggleSign()">+/−</button>
+                <button class="scientific-operator" onclick="appendConstant('e')">e</button>
+
+                <button class="scientific-operator" onclick="appendFunction('abs')">|x|</button>
+                <button class="scientific-operator" onclick="appendFunction('exp')">e^x</button>
+                <button class="scientific-operator" onclick="appendFunction('deg2rad')">°→rad</button>
+                <button class="scientific-operator" onclick="appendFunction('rad2deg')">rad→°</button>
+                <button class="scientific-operator" onclick="appendFunction('reciprocal')">1/x</button>
+
+                <button onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+                <button onclick="appendNumber('.')">.</button>
+                <button class="operator" onclick="appendOperator('(')">(</button>
+                <button class="operator" onclick="appendOperator(')')">)</button>
+                <button class="equals" onclick="calculate()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let expression = document.getElementById('expression');
+        let currentInput = '0';
+        let currentExpression = '';
+        let operator = null;
+        let previousInput = null;
+        let shouldResetDisplay = false;
+        let angleMode = 'deg'; // 'deg', 'rad', 'grad'
+        let currentMode = 'basic';
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function updateExpression() {
+            expression.textContent = currentExpression;
+        }
+
+        function toggleMode(mode) {
+            currentMode = mode;
+            document.getElementById('basicMode').classList.toggle('hidden');
+            document.getElementById('scientificMode').classList.toggle('hidden');
+            document.getElementById('angleMode').classList.toggle('hidden');
+            
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function setAngleMode(mode) {
+            angleMode = mode;
+            document.querySelectorAll('.angle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function appendNumber(num) {
+            if (shouldResetDisplay) {
+                currentInput = num;
+                shouldResetDisplay = false;
+            } else {
+                if (currentInput === '0' && num !== '.') {
+                    currentInput = num;
+                } else if (num === '.' && currentInput.includes('.')) {
+                    return;
+                } else {
+                    currentInput += num;
+                }
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (currentInput === '' && op !== '(' && op !== ')') return;
+            
+            if (op === '(' || op === ')') {
+                currentExpression += op;
+                currentInput += op;
+                updateExpression();
+                return;
+            }
+
+            if (operator !== null && !shouldResetDisplay && op !== '**' && op !== '//') {
+                calculate();
+            }
+
+            if (op === '**' || op === '//') {
+                currentInput += op;
+                currentExpression += currentInput + ' ';
+                shouldResetDisplay = true;
+            } else {
+                previousInput = currentInput;
+                currentExpression = currentInput + ' ' + op + ' ';
+                operator = op;
+                shouldResetDisplay = true;
+            }
+            updateDisplay();
+            updateExpression();
+        }
+
+        function appendConstant(constant) {
+            if (constant === 'pi') {
+                currentInput = Math.PI.toString();
+            } else if (constant === 'e') {
+                currentInput = Math.E.toString();
+            }
+            updateDisplay();
+            shouldResetDisplay = true;
+        }
+
+        function appendFunction(func) {
+            const value = parseFloat(currentInput);
+            let result = 0;
+
+            switch (func) {
+                case 'sin':
+                    result = Math.sin(angleMode === 'deg' ? value * Math.PI / 180 : angleMode === 'grad' ? value * Math.PI / 200 : value);
+                    break;
+                case 'cos':
+                    result = Math.cos(angleMode === 'deg' ? value * Math.PI / 180 : angleMode === 'grad' ? value * Math.PI / 200 : value);
+                    break;
+                case 'tan':
+                    result = Math.tan(angleMode === 'deg' ? value * Math.PI / 180 : angleMode === 'grad' ? value * Math.PI / 200 : value);
+                    break;
+                case 'asin':
+                    result = Math.asin(value);
+                    result = angleMode === 'deg' ? result * 180 / Math.PI : angleMode === 'grad' ? result * 200 / Math.PI : result;
+                    break;
+                case 'acos':
+                    result = Math.acos(value);
+                    result = angleMode === 'deg' ? result * 180 / Math.PI : angleMode === 'grad' ? result * 200 / Math.PI : result;
+                    break;
+                case 'atan':
+                    result = Math.atan(value);
+                    result = angleMode === 'deg' ? result * 180 / Math.PI : angleMode === 'grad' ? result * 200 / Math.PI : result;
+                    break;
+                case 'sinh':
+                    result = Math.sinh(value);
+                    break;
+                case 'cosh':
+                    result = Math.cosh(value);
+                    break;
+                case 'tanh':
+                    result = Math.tanh(value);
+                    break;
+                case 'sqrt':
+                    result = Math.sqrt(value);
+                    currentExpression = '√(' + currentInput + ')';
+                    break;
+                case 'cbrt':
+                    result = Math.cbrt(value);
+                    currentExpression = '∛(' + currentInput + ')';
+                    break;
+                case 'log':
+                    result = Math.log10(value);
+                    currentExpression = 'log(' + currentInput + ')';
+                    break;
+                case 'ln':
+                    result = Math.log(value);
+                    currentExpression = 'ln(' + currentInput + ')';
+                    break;
+                case 'exp':
+                    result = Math.exp(value);
+                    currentExpression = 'e^(' + currentInput + ')';
+                    break;
+                case 'factorial':
+                    result = factorial(Math.floor(value));
+                    currentExpression = currentInput + '!';
+                    break;
+                case 'abs':
+                    result = Math.abs(value);
+                    currentExpression = '|' + currentInput + '|';
+                    break;
+                case 'reciprocal':
+                    result = value !== 0 ? 1 / value : 0;
+                    currentExpression = '1/(' + currentInput + ')';
+                    break;
+                case 'deg2rad':
+                    result = value * Math.PI / 180;
+                    currentExpression = currentInput + '° → rad';
+                    break;
+                case 'rad2deg':
+                    result = value * 180 / Math.PI;
+                    currentExpression = currentInput + ' rad → °';
+                    break;
+            }
+
+            currentInput = result.toString();
+            updateDisplay();
+            updateExpression();
+            shouldResetDisplay = true;
+        }
+
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        function calculate() {
+            if (operator === null || previousInput === null) {
+                return;
+            }
+
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    result = current !== 0 ? prev / current : 0;
+                    break;
+                case '%':
+                    result = prev % current;
+                    break;
+                case '**':
+                    result = Math.pow(prev, current);
+                    break;
+                case '//':
+                    result = Math.floor(prev / current);
+                    break;
+                default:
+                    return;
+            }
+
+            currentExpression = prev + ' ' + operator + ' ' + current + ' = ' + result;
+            currentInput = result.toString();
+            operator = null;
+            previousInput = null;
+            shouldResetDisplay = true;
+            updateDisplay();
+            updateExpression();
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            currentExpression = '';
+            operator = null;
+            previousInput = null;
+            shouldResetDisplay = false;
+            updateDisplay();
+            updateExpression();
+        }
+
+        function backspace() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            currentInput = (parseFloat(currentInput) * -1).toString();
+            updateDisplay();
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
